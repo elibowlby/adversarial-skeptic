@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Adversarial skeptic ephemeral lock
+.adversarial-lock.json
+
+# Temporary / Scratch
+scratch/
+tmp/
+*.tmp
+*.log
+
+# Operating System
+.DS_Store
+Thumbs.db

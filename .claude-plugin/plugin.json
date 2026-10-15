@@ -1,0 +1,21 @@
+{
+  "name": "adversarial-skeptic",
+  "description": "Execution-grounded adversarial QA and falsification skill. Use when auditing codebases, verifying specs, hunting edge-case bugs after unit tests pass, or running a no-cheating red-team/blue-team remediation loop.",
+  "version": "1.0.0",
+  "author": {
+    "name": "adversarial-skeptic maintainers"
+  },
+  "homepage": "https://github.com/elibowlby/adversarial-skeptic",
+  "repository": "https://github.com/elibowlby/adversarial-skeptic",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "adversarial",
+    "qa",
+    "falsification",
+    "tamper-guard",
+    "red-team",
+    "anti-bias",
+    "verification"
+  ]
+}

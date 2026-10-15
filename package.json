@@ -1,0 +1,34 @@
+{
+  "name": "adversarial-skeptic",
+  "version": "1.0.0",
+  "description": "Execution-grounded adversarial QA and falsification skill for AI agents",
+  "type": "module",
+  "main": "skills/adversarial-skeptic/scripts/tamper-guard.mjs",
+  "bin": {
+    "tamper-guard": "skills/adversarial-skeptic/scripts/tamper-guard.mjs"
+  },
+  "files": [
+    "skills",
+    ".claude-plugin"
+  ],
+  "scripts": {
+    "test": "node skills/adversarial-skeptic/scripts/tamper-guard.mjs --help"
+  },
+  "keywords": [
+    "agent-skills",
+    "claude-code",
+    "antigravity",
+    "cursor",
+    "codex",
+    "adversarial-testing",
+    "falsification",
+    "qa",
+    "tamper-guard"
+  ],
+  "author": "adversarial-skeptic maintainers",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elibowlby/adversarial-skeptic.git"
+  }
+}
