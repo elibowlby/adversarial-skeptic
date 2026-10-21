@@ -91,6 +91,13 @@ Or trigger with slash command:
 
 ### Workplace Example: Verifying Branch Changes
 
+<p align="center">
+  <img src="./assets/workplace-session.gif" alt="adversarial-skeptic workplace session in Claude Code" width="850" />
+</p>
+
+<details>
+<summary><b>View terminal transcript</b></summary>
+
 ```text
 $ git status
 On branch feat/billing-webhooks
@@ -132,6 +139,7 @@ Changes not staged for commit:
 
 ● Unlocked test/adversarial-skeptic.test.ts. Clean and ready for PR.
 ```
+</details>
 
 ### Cheating Prevention
 
@@ -267,16 +275,6 @@ Sample scorecard:
 
 ---
 
-## Terminal Recording
-
-Real terminal session executing against `examples/real-world-usecase/`:
-
-<p align="center">
-  <img src="./assets/demo.gif" alt="adversarial-skeptic terminal recording" width="850" />
-</p>
-
----
-
 ## Repository Structure
 
 ```
@@ -308,9 +306,10 @@ adversarial-skeptic/
 │   │   └── run-workflow.mjs
 │   └── real-world-audit-report.md            # 11-bug empirical case study
 ├── assets/
-│   ├── demo.gif                              # Live VHS recording
-│   ├── demo.svg                              # Terminal visual asset
-│   └── demo.tape                             # VHS recording configuration
+│   ├── workplace-session.gif         # Real-world Claude Code terminal recording
+│   ├── workplace-session.tape        # VHS recording definition
+│   ├── demo.gif                      # Minimal CLI demo
+│   └── demo.tape                     # VHS recording configuration
 ├── package.json                              # Agent skills and npm manifest
 ├── LICENSE                                   # MIT
 └── README.md                                 # Documentation & Quickstart
