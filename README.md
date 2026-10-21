@@ -89,19 +89,64 @@ Or trigger with slash command:
 /adversarial-skeptic
 ```
 
-### Workflow
+### Workplace Example: Verifying Branch Changes
 
-1. **Inspect Changes:** The agent checks your branch diff against main without reading existing tests.
-2. **Write Failing Tests:** The agent drafts `test/adversarial-skeptic.test.*` targeting edge cases in what you changed and runs it with your test runner (`node --test`, `vitest`, `pytest`, `cargo test`, `go test`). Every test must fail against current code (`exit_code != 0`).
-3. **Cryptographic Lock:** The agent locks the test file:
-   ```bash
-   node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs lock test/adversarial-skeptic.test.ts
-   ```
-4. **Fix & Verify:** Fix the source code in `src/`. Once done, verify and unlock:
-   ```bash
-   node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs verify test/adversarial-skeptic.test.ts --cmd "npx vitest run test/adversarial-skeptic.test.ts"
-   node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs unlock test/adversarial-skeptic.test.ts
-   ```
+```text
+$ git status
+On branch feat/billing-webhooks
+Changes not staged for commit:
+  modified: src/billing/webhook-handler.ts
+
+╭─ Claude Code ─────────────────────────────────────────────────────────────╮
+│ > use adversarial-skeptic to create bullet proof tests on my changes in   │
+│   this branch                                                             │
+╰───────────────────────────────────────────────────────────────────────────╯
+
+● Inspecting branch changes against main (git diff main...HEAD)
+  Found 148 lines changed in src/billing/webhook-handler.ts.
+  Identified 2 unhandled edge cases:
+  1. Concurrent retries replay identical idempotency keys without transaction locks
+  2. 0-byte payload on network delivery timeouts crashes JSON parser
+
+● Proof-by-Execution: Created test/adversarial-skeptic.test.ts
+  $ node --test test/adversarial-skeptic.test.ts
+  ✖ idempotency key replay allows duplicate charge (4.2ms)
+  ✖ 0-byte payload crashes JSON parser with unexpected EOF (0.8ms)
+  ℹ tests 2, pass 0, fail 2 (proved failing against current code)
+
+● Locking adversarial test suite
+  $ tamper-guard lock test/adversarial-skeptic.test.ts
+  Locked test/adversarial-skeptic.test.ts (2 tests, sha256: 8f2a1c...). Read-only mode set.
+
+● Fixing root causes in src/billing/webhook-handler.ts...
+  - Added atomic transaction lock on idempotency_key
+  - Added empty payload guard before JSON parsing
+
+● Verifying fix with tamper-guard
+  $ tamper-guard verify test/adversarial-skeptic.test.ts --cmd "node --test test/adversarial-skeptic.test.ts"
+  Verified test/adversarial-skeptic.test.ts (2 tests, sha256 match).
+  Running: node --test test/adversarial-skeptic.test.ts
+  ✔ idempotency key replay deduplicated cleanly (1.1ms)
+  ✔ 0-byte payload returns 400 bad request without crash (0.3ms)
+  Verification passed: all tests passed without test tampering.
+
+● Unlocked test/adversarial-skeptic.test.ts. Clean and ready for PR.
+```
+
+### Cheating Prevention
+
+If an agent attempts to edit tests, delete assertions, or add `.skip` to make CI green:
+```bash
+$ tamper-guard verify test/adversarial-skeptic.test.ts
+TAMPER DETECTED: test/adversarial-skeptic.test.ts was modified after locking.
+  Expected tests: 2 | Current tests: 1 | Skipped markers found: test.skip
+```
+
+If an agent attempts to forge `.adversarial-lock.json` to match its changes:
+```bash
+$ tamper-guard verify test/adversarial-skeptic.test.ts
+FORGERY DETECTED: .adversarial-lock.json does not match shadow lock.
+```
 
 ---
 
@@ -117,56 +162,6 @@ When coding agents evaluate their own work, they test only the paths they alread
 | **70-Bug Benchmark** | 14 to 27 / 70 bugs caught | 66 / 70 bugs caught |
 
 `adversarial-skeptic` automates this protocol for any codebase. Instead of speculative comments, it generates runnable failing tests and locks them with SHA-256 so the builder agent cannot cheat during fixes.
-
----
-
-## Real-World Example & Demo
-
-Run the real-world branch telemetry usecase (`examples/real-world-usecase/`) to see `tamper-guard` catch test tampering and lockfile forgeries in real time:
-
-```bash
-npm run demo
-```
-
-<p align="center">
-  <img src="./assets/demo.svg" alt="adversarial-skeptic real-world branch verification" width="850" />
-</p>
-
-### Terminal Output Examples
-
-**1. When tests are locked:**
-```bash
-$ node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs lock test/adversarial-skeptic.test.ts
-Locked test/adversarial-skeptic.test.ts (11 tests, sha256: e8b28f1025a1f6a19f9b5c3e56f772ba827439169002a249cc8b7cf7098e9821). Read-only mode set.
-```
-
-**2. If an agent modifies tests (`chmod +w`, deletes assertions, or adds `test.skip`):**
-```bash
-$ node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs verify test/adversarial-skeptic.test.ts
-TAMPER DETECTED: test/adversarial-skeptic.test.ts was modified after locking.
-  Expected SHA-256: e8b28f1025a1f6a19f9b5c3e56f772ba827439169002a249cc8b7cf7098e9821
-  Current SHA-256:  a1c938f4d9b231904a43ef810934c9f13904a43ef810934c9f13904a43ef8109
-  Expected tests:   11
-  Current tests:    9
-  Skipped markers found: test.skip
-```
-
-**3. If an agent attempts to forge `.adversarial-lock.json` to match the modified test file:**
-```bash
-$ node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs verify test/adversarial-skeptic.test.ts
-FORGERY DETECTED: .adversarial-lock.json does not match shadow lock.
-```
-
-**4. When legitimately resolved in `src/`:**
-```bash
-$ node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs verify test/adversarial-skeptic.test.ts --cmd "npx vitest run test/adversarial-skeptic.test.ts"
-Verified test/adversarial-skeptic.test.ts (11 tests, sha256 match).
-Running: npx vitest run test/adversarial-skeptic.test.ts
-
- ✓ test/adversarial-skeptic.test.ts (11 tests passed)
-
-Verification passed: all tests passed without test tampering.
-```
 
 ---
 
@@ -269,6 +264,16 @@ Sample scorecard:
 | **3. Schema and Drift** | Timezones (`+02:00` vs `Z`), CRLF vs LF, union polymorphism | Local timezone offsets stripped, causing 1-day date shift |
 | **4. State Contamination** | Concurrency bleed, shared state leaks | Modifying Target A's context inadvertently satisfies Target B's test |
 | **5. Security and Redaction** | Multiline keys, quoted whitespace, shell injection | PEM RSA private key bypasses single-line regex sanitizer |
+
+---
+
+## Terminal Recording
+
+Real terminal session executing against `examples/real-world-usecase/`:
+
+<p align="center">
+  <img src="./assets/demo.gif" alt="adversarial-skeptic terminal recording" width="850" />
+</p>
 
 ---
 
