@@ -164,14 +164,7 @@ function runLock(targetPath, force = false) {
   try { chmodSync(lockFilePath, 0o444); } catch {}
   try { chmodSync(shadowPath, 0o444); } catch {}
 
-  console.log(`🔒 Adversarial lock engaged:`);
-  console.log(`  File:        ${targetPath}`);
-  console.log(`  Resolved:    ${absPath}`);
-  console.log(`  SHA-256:     ${sha256}`);
-  console.log(`  Active Tests: ${testCount}`);
-  console.log(`  Lockfile:    ${LOCK_FILE} (read-only)`);
-  console.log(`  Shadow Lock: ${shadowPath} (read-only)`);
-  console.log(`\nBuilder agent is now locked to fixing implementation code without touching this test suite.`);
+  console.log(`Locked ${targetPath} (${testCount} tests, sha256: ${sha256}). Read-only mode set.`);
 }
 
 function runVerify(targetPath, testCmd) {
@@ -188,7 +181,7 @@ function runVerify(targetPath, testCmd) {
   }
 
   if (!lockExists || !shadowExists) {
-    console.error(`🚨 FORGERY DETECTED: Builder agent attempted to overwrite or bypass ${LOCK_FILE}!`);
+    console.error(`FORGERY DETECTED: ${LOCK_FILE} does not match shadow lock.`);
     process.exit(1);
   }
 
@@ -199,7 +192,7 @@ function runVerify(targetPath, testCmd) {
     lockData = JSON.parse(lockRaw);
     shadowData = JSON.parse(shadowRaw);
   } catch (err) {
-    console.error(`🚨 FORGERY DETECTED: Builder agent attempted to overwrite or bypass ${LOCK_FILE}!`);
+    console.error(`FORGERY DETECTED: ${LOCK_FILE} does not match shadow lock.`);
     process.exit(1);
   }
 
@@ -213,7 +206,7 @@ function runVerify(targetPath, testCmd) {
     lockData.testCount !== shadowData.testCount ||
     lockData.targetFileResolved !== shadowData.targetFileResolved
   ) {
-    console.error(`🚨 FORGERY DETECTED: Builder agent attempted to overwrite or bypass ${LOCK_FILE}!`);
+    console.error(`FORGERY DETECTED: ${LOCK_FILE} does not match shadow lock.`);
     process.exit(1);
   }
 
@@ -240,7 +233,7 @@ function runVerify(targetPath, testCmd) {
   const hasSkipped = skippedMarkers.length > 0;
 
   if (hashMismatch || countReduced || hasSkipped) {
-    console.error(`TAMPER DETECTED: Builder agent modified the adversarial test suite! Restore ${targetPath} immediately.`);
+    console.error(`TAMPER DETECTED: ${targetPath} was modified after locking.`);
     if (hashMismatch) {
       console.error(`  Expected SHA-256: ${lockData.sha256}`);
       console.error(`  Current SHA-256:  ${currentHash}`);
@@ -255,26 +248,21 @@ function runVerify(targetPath, testCmd) {
     process.exit(1);
   }
 
-  console.log(`🛡️ Test suite verified intact:`);
-  console.log(`  File:        ${targetPath}`);
-  console.log(`  SHA-256:     ${currentHash} (MATCH)`);
-  console.log(`  Active Tests: ${currentCount} (MATCH)`);
+  console.log(`Verified ${targetPath} (${currentCount} tests, sha256 match).`);
 
   if (testCmd) {
-    console.log(`\nExecuting verification command: ${testCmd}`);
-    console.log(`----------------------------------------------------------------`);
+    console.log(`Running: ${testCmd}`);
     const result = spawnSync(testCmd, {
       shell: true,
       stdio: 'inherit'
     });
-    console.log(`----------------------------------------------------------------`);
 
     if (result.status !== 0) {
-      console.error(`❌ VERIFICATION FAILED: Test suite exited with code ${result.status ?? 1}. Implementation still contains bugs.`);
+      console.error(`Verification failed: exit code ${result.status ?? 1}`);
       process.exit(result.status ?? 1);
     }
 
-    console.log(`✅ VERIFICATION PASSED: All adversarial tests passed without test tampering.`);
+    console.log(`Verification passed: all tests passed without test tampering.`);
   }
 }
 
@@ -295,7 +283,7 @@ function runUnlock(targetPath) {
     try { unlinkSync(shadowPath); } catch {}
   }
 
-  console.log(`🔓 Adversarial lock released: Permissions restored and lockfiles removed.`);
+  console.log(`Unlocked ${targetPath}. Lockfiles removed.`);
 }
 
 // CLI Parsing

@@ -1,7 +1,7 @@
 {
   "name": "adversarial-skeptic",
   "version": "1.0.0",
-  "description": "Stop AI agents from rubber-stamping their own bugs or editing failing tests to pass. Blind red-team test generation + SHA-256 test locking for Claude Code, Cursor & Antigravity.",
+  "description": "Blind red-team test generation and SHA-256 test locking to stop coding agents from rubber-stamping bugs or weakening test assertions.",
   "type": "module",
   "main": "skills/adversarial-skeptic/scripts/tamper-guard.mjs",
   "bin": {

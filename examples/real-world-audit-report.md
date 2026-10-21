@@ -1,18 +1,16 @@
-# Real-World Audit Report: Agent CLI Framework
+# Audit Report: Agent CLI Framework
 
-> **Context:** An AI-driven CLI framework claimed "100% passing unit tests" across 42 unit test suites authored by the builder agent. The **Adversarial Skeptic** was dispatched in an empty-backpack subagent container without reading existing unit tests.
->
-> **Result:** 11 critical production-breaking bugs were falsified via execution-grounded tests in `test/adversarial-skeptic.test.ts`.
+11 edge cases identified during a blind audit of `@agent-framework/cli` v2.4.0, verified with test suite `test/adversarial-skeptic.test.ts`.
 
 ---
 
 ## Audit Summary
 
 - **Target Package:** `@agent-framework/cli` v2.4.0
-- **Adversarial Test Suite:** `test/adversarial-skeptic.test.ts`
-- **Tamper Lock Hash:** `e8b28f1025a1f6a19f9b5c3e56f772ba827439169002a249cc8b7cf7098e9821`
-- **Initial Test Run:** 11 failing test assertions (100% falsification rate)
-- **Status After Builder Remediation:** 11 passing assertions verified via `tamper-guard.mjs verify`
+- **Test Suite:** `test/adversarial-skeptic.test.ts`
+- **Lock Hash:** `e8b28f1025a1f6a19f9b5c3e56f772ba827439169002a249cc8b7cf7098e9821`
+- **Initial Run:** 11 failing test assertions
+- **Post-Fix Run:** 11 passing assertions verified with `tamper-guard.mjs verify`
 
 ---
 
@@ -183,24 +181,19 @@ AssertionError: expected file 'pwned.txt' not to exist after executing git comma
 
 ---
 
-## Cryptographic Remediation Verification
+## Remediation Verification
 
 ```bash
 $ node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs verify test/adversarial-skeptic.test.ts --cmd "npx vitest run test/adversarial-skeptic.test.ts"
 
-🛡️ Test suite verified intact:
-  File:         test/adversarial-skeptic.test.ts
-  SHA-256:      e8b28f1025a1f6a19f9b5c3e56f772ba827439169002a249cc8b7cf7098e9821 (MATCH)
-  Active Tests: 11 (MATCH)
+Verified test/adversarial-skeptic.test.ts (11 tests, sha256 match).
+Running: npx vitest run test/adversarial-skeptic.test.ts
 
-Executing verification command: npx vitest run test/adversarial-skeptic.test.ts
-----------------------------------------------------------------
  ✓ test/adversarial-skeptic.test.ts (11 tests) 412ms
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  23:14:02
    Duration  610ms
-----------------------------------------------------------------
-✅ VERIFICATION PASSED: All adversarial tests passed without test tampering.
+
+Verification passed: all tests passed without test tampering.
 ```

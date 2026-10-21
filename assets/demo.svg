@@ -39,7 +39,7 @@
     <circle cx="64" cy="39" r="6" fill="#f9e2af"/>
     <circle cx="84" cy="39" r="6" fill="#a6e3a1"/>
     
-    <text x="460" y="44" text-anchor="middle" class="title">tamper-guard — Catch the Agent Cheating Simulation</text>
+    <text x="460" y="44" text-anchor="middle" class="title">tamper-guard: Tamper Protection Simulation</text>
   </g>
 
   <!-- Terminal Content -->
@@ -52,67 +52,54 @@
 
     <!-- Step 1: Lock -->
     <text x="0" y="26">
-      <tspan class="cyan">🔒 [STEP 1/5] Adversarial lock engaged:</tspan>
-      <tspan class="dim"> test/adversarial-skeptic.test.ts</tspan>
+      <tspan class="cyan">[1/5] Locking test suite</tspan>
     </text>
     <text x="20" y="48">
-      <tspan class="dim">SHA-256:</tspan>
-      <tspan class="white"> e8b28f1025a1f6a19f9b5c3e56f772ba827439169002a249cc8b7cf7098e9821</tspan>
-    </text>
-    <text x="20" y="70">
-      <tspan class="dim">Permissions:</tspan>
-      <tspan class="green"> 0o444 (read-only)</tspan>
-      <tspan class="dim">  |  Active Tests:</tspan>
-      <tspan class="white"> 11</tspan>
-      <tspan class="dim">  |  Shadow Lock:</tspan>
-      <tspan class="cyan"> os.tmpdir()</tspan>
+      <tspan class="white">Locked test/adversarial-skeptic.test.ts (11 tests, sha256: e8b28f1025...). Read-only mode set.</tspan>
     </text>
 
     <!-- Step 2: Builder Bypasses -->
-    <text x="0" y="108">
-      <tspan class="yellow">⚠️ [STEP 2/5] Builder agent fails edge cases &amp; attempts to cheat:</tspan>
+    <text x="0" y="86">
+      <tspan class="yellow">[2/5] Simulating test tampering (skipping tests and deleting assertions)</tspan>
     </text>
-    <text x="20" y="130">
-      <tspan class="yellow">→ chmod +w test/adversarial-skeptic.test.ts</tspan>
-    </text>
-    <text x="20" y="152">
-      <tspan class="yellow">→ Injected test.skip on circular DAG test</tspan>
-      <tspan class="dim"> (deleted failing assertions: 11 → 9 tests)</tspan>
+    <text x="20" y="108">
+      <tspan class="dim">Action: chmod +w test/adversarial-skeptic.test.ts, added test.skip, deleted test assertion</tspan>
     </text>
 
     <!-- Step 3: Tamper Detected -->
-    <text x="0" y="190">
-      <tspan class="red">🚨 [STEP 3/5] CI / Pre-commit verification: TAMPER DETECTED</tspan>
+    <text x="0" y="146">
+      <tspan class="red">[3/5] Running verification on modified suite</tspan>
     </text>
-    <text x="20" y="212">
-      <tspan class="red">Expected tests: 11  |  Current tests: 9  |  Skipped markers: test.skip</tspan>
+    <text x="20" y="168">
+      <tspan class="red">TAMPER DETECTED: test/adversarial-skeptic.test.ts was modified after locking.</tspan>
     </text>
-    <text x="20" y="234">
-      <tspan class="dim">Result:</tspan>
-      <tspan class="red"> Process exited with code 1. Tampered PR blocked from merge.</tspan>
+    <text x="20" y="190">
+      <tspan class="dim">Result: exited with code 1 (tamper detected)</tspan>
     </text>
 
     <!-- Step 4: Forgery Detected -->
-    <text x="0" y="272">
-      <tspan class="red">🚨 [STEP 4/5] Builder attempts .adversarial-lock.json forgery:</tspan>
+    <text x="0" y="228">
+      <tspan class="red">[4/5] Simulating forged lockfile</tspan>
     </text>
-    <text x="20" y="294">
-      <tspan class="red">🚨 FORGERY DETECTED: Local lockfile tampered! Mismatch against shadow lock.</tspan>
+    <text x="20" y="250">
+      <tspan class="red">FORGERY DETECTED: .adversarial-lock.json does not match shadow lock.</tspan>
     </text>
-    <text x="20" y="316">
-      <tspan class="dim">Result:</tspan>
-      <tspan class="red"> Out-of-workspace shadow lock in os.tmpdir() prevented bypass.</tspan>
+    <text x="20" y="272">
+      <tspan class="dim">Result: exited with code 1 (forgery detected)</tspan>
     </text>
 
     <!-- Step 5: Clean Pass -->
-    <text x="0" y="354">
-      <tspan class="green">🛡️ [STEP 5/5] Legitimate fix inside src/: VERIFICATION PASSED</tspan>
+    <text x="0" y="310">
+      <tspan class="green">[5/5] Restoring original suite and verifying</tspan>
+    </text>
+    <text x="20" y="332">
+      <tspan class="white">Verified test/adversarial-skeptic.test.ts (11 tests, sha256 match).</tspan>
+    </text>
+    <text x="20" y="354">
+      <tspan class="green">Verification passed: all tests passed without test tampering.</tspan>
     </text>
     <text x="20" y="376">
-      <tspan class="green">✓ All 11 adversarial tests passed without test tampering (exit code 0)</tspan>
-    </text>
-    <text x="20" y="398">
-      <tspan class="cyan">🔓 Adversarial lock released: Permissions restored and lockfiles cleaned up.</tspan>
+      <tspan class="dim">Unlocked test/adversarial-skeptic.test.ts. Lockfiles removed.</tspan>
     </text>
   </g>
 </svg>

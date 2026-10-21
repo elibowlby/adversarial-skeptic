@@ -1,34 +1,33 @@
 ---
 name: adversarial-skeptic
-description: "Stop AI agents from rubber-stamping their own bugs or editing failing tests to pass. Blind red-team test generation + SHA-256 test locking for Claude Code, Cursor & Antigravity."
+description: "Generates blind red-team tests from specs and locks them with SHA-256 to stop coding agents from rubber-stamping bugs or weakening test assertions."
 ---
 
-# Adversarial Skeptic: Execution-Grounded Falsification Protocol
+# Adversarial Skeptic Protocol
 
-## Overview & The 70-Bug Reality
+## Overview
 
-Single coding agents suffer from **self-affirmation bias**: when an agent authors both implementation and test suites, it tests only the scenarios it remembered to implement, achieving 100% test passes while missing critical edge cases. In Anthropic's 70-bug dynamic benchmark, single agents caught only 14–27 bugs; isolated "empty-backpack" skeptic agents caught 66/70 bugs.
+Coding agents frequently miss their own edge cases and may edit or skip failing tests to make CI green. adversarial-skeptic prevents this with three steps:
 
-`adversarial-skeptic` enforces an empirical 3-Phase protocol:
-1. **Empty-Backpack Audit:** Review spec and implementation with zero prior knowledge of existing unit tests.
-2. **Proof-by-Execution:** Bug claims are strictly invalid unless proven by an active failing test case (`exit_code != 0`).
-3. **Cryptographic Tamper-Guard:** The test suite is cryptographically locked with SHA-256 before remediation begins; the builder agent is forbidden from editing or weakening test assertions.
+1. **Empty-Backpack Audit:** Inspect the spec and source code without reading existing unit tests.
+2. **Proof-by-Execution:** Every bug claim must be backed by a runnable test that fails against current code (`exit_code != 0`).
+3. **Cryptographic Lock:** Lock the test suite with SHA-256 before remediation begins. The builder agent can only modify implementation files in `src/`.
 
 ---
 
 ## When to Trigger
 
 Activate this skill when:
-- Conducting post-implementation audits or pre-release verification.
-- User or workflow requests `/adversarial-skeptic`.
-- All standard unit tests pass, but production-grade robustness or red-team validation is required.
-- Refactoring complex state machines, stream ingestion, or security-sensitive modules.
+- Auditing an implementation against a specification or type definitions.
+- Running pre-release verification or responding to `/adversarial-skeptic`.
+- Refactoring parsers, state machines, stream ingestion, or security-sensitive modules.
+- Existing tests pass, but edge cases need thorough validation.
 
 ---
 
 ## Locating `tamper-guard.mjs`
 
-To run `tamper-guard.mjs` regardless of where this skill is installed, resolve its path in order:
+Resolve the CLI script in order:
 1. Local workspace skill path: `./skills/adversarial-skeptic/scripts/tamper-guard.mjs`
 2. Agent workspace customizations: `./.agents/skills/adversarial-skeptic/scripts/tamper-guard.mjs`
 3. Claude workspace skills: `./.claude/skills/adversarial-skeptic/scripts/tamper-guard.mjs`
@@ -41,95 +40,89 @@ TAMPER_GUARD="<resolved-path-to-tamper-guard.mjs>"
 
 ---
 
-## The 3-Phase Protocol
+## Protocol Steps
 
-### Phase 1: Empty-Backpack Skeptic Audit
+### Step 1: Empty-Backpack Audit
 
-To eliminate self-affirmation bias, establish an isolated mental model:
-- **Subagent Execution (Recommended):** Spawn an isolated subagent with an empty backpack prompt:
+Avoid reading existing tests to prevent self-affirmation bias:
+- **Subagent (Recommended):** Dispatch an isolated subagent:
+  ```text
+  You are an adversarial test engineer. Read only SPEC.md (or README/types) and src/.
+  Do not inspect existing test files. Find edge cases and invariant violations.
   ```
-  You are an adversarial red-team QA engineer. Read only SPEC.md (or README/types) and src/.
-  DO NOT read existing test files or existing test runners yet. Identify unhandled edge cases
-  and architectural invariants that violate the spec.
-  ```
-- **Single Context Fallback:** If running inline, deliberately inspect only `SPEC.md` and `src/`. Never read `tests/` or `test/` prior to drafting attack hypotheses.
-- **Consult Taxonomy:** Read `references/attack-taxonomy.md` to target the 5 core attack vectors:
-  1. Boundary & Malformed Stream Ingestion (0-byte files, `null` JSONL lines, mid-stream UTF-8 cuts).
-  2. Graph & State Machine Invariants (circular DAG cycles, orphaned pointer IDs, inverted timestamps).
-  3. Schema & Environment Drift (timezones with `+02:00` offsets, CRLF vs LF, union types).
-  4. Cross-Feature State Contamination (interleaved actions across disjoint targets).
-  5. Security & Redaction Evasion (multiline PEM keys, quoted whitespace, shell injection).
+- **Single Context:** Read only `SPEC.md` and `src/`. Do not open `tests/` before writing hypotheses.
+- Target common edge cases from `references/attack-taxonomy.md`:
+  - Truncated or empty inputs (0-byte files, `null` JSONL records, sliced UTF-8 buffers).
+  - Graph cycles (circular parents, orphaned child references after deletion).
+  - Environment drift (timezone offsets, CRLF vs LF line endings).
+  - Concurrent state leaks across tenants or sessions.
+  - Secret leaks (multiline PEM keys, quoted Bearer tokens) and command injection.
 
-### Phase 2: Proof-by-Execution (`test/adversarial-skeptic.test.*`)
+### Step 2: Proof-by-Execution (`test/adversarial-skeptic.test.*`)
 
-Theoretical bugs and speculative review nitpicks are prohibited. Every bug must be proven:
+Every issue must have a reproducing test. Speculative review comments are invalid without code.
 
-1. **Author the Adversarial Test Suite:**
-   Create an execution-grounded test file matching the project's native runner:
-   - TypeScript/JavaScript: `test/adversarial-skeptic.test.ts` (Vitest, Jest, Bun)
+1. Write the test suite using the project's native runner:
+   - TypeScript/JavaScript: `test/adversarial-skeptic.test.ts` (node --test, vitest, jest)
    - Python: `tests/test_adversarial_skeptic.py` (pytest)
    - Rust: `tests/adversarial_skeptic.rs` (cargo test)
    - Go: `adversarial_skeptic_test.go` (go test)
 
-2. **Execute and Confirm Failure:**
-   Run the test runner directly against current `src/`:
+2. Run the suite against current `src/`:
    ```bash
-   # Examples:
-   npx vitest run test/adversarial-skeptic.test.ts
-   pytest tests/test_adversarial_skeptic.py
-   cargo test --test adversarial_skeptic
+   node --test test/adversarial-skeptic.test.ts
+   # or: npx vitest run test/adversarial-skeptic.test.ts
+   # or: pytest tests/test_adversarial_skeptic.py
    ```
-   **Hard Gate:** Every test assertion MUST fail (`exit_code != 0`). If a test passes against the current codebase, either the bug does not exist or the test is written incorrectly. Refine until failure is proven.
+   Every test must fail (`exit_code != 0`). If a test passes against the current codebase, refine it until the failure is proven.
 
-### Phase 3: Cryptographic Tamper-Guard Remediation
+### Step 3: Cryptographic Lock and Remediation
 
-Once the failing test suite proves the bugs, enforce the no-cheating remediation loop:
+Once tests fail as expected, lock the suite:
 
-1. **Lock the Adversarial Test Suite:**
-   Lock the test file using `tamper-guard.mjs`. This computes the SHA-256 digest, validates active test assertions, rejects any `.skip` or `.todo` markers, writes `.adversarial-lock.json` alongside an out-of-workspace shadow lock in `os.tmpdir()`, and applies read-only permissions (`chmod 444`):
+1. Lock the test file:
    ```bash
    node "$TAMPER_GUARD" lock test/adversarial-skeptic.test.ts
    ```
+   This generates a SHA-256 hash, checks that all tests are active (no `.skip` or `.todo`), creates a shadow lock in `os.tmpdir()`, and sets `chmod 444`.
 
-2. **Hand Off to Builder Agent / Blue-Team Mode:**
-   Deliver the Audit Report to the Builder agent or switch to remediation mode.
-   **Strict Constraint for Builder:** The Builder agent is strictly forbidden from editing, commenting out, or deleting any lines in the adversarial test suite, and cannot overwrite or forge `.adversarial-lock.json`. All fixes must be made inside `src/`.
+2. Remediate in `src/`:
+   Fix the bug in the source files. The test suite is read-only and must not be modified.
 
-3. **Verify Remediation:**
-   Run `tamper-guard.mjs verify` with the test runner command:
+3. Verify fixes:
    ```bash
-   node "$TAMPER_GUARD" verify test/adversarial-skeptic.test.ts --cmd "npx vitest run test/adversarial-skeptic.test.ts"
+   node "$TAMPER_GUARD" verify test/adversarial-skeptic.test.ts --cmd "node --test test/adversarial-skeptic.test.ts"
    ```
-   - If the Builder agent attempts to forge `.adversarial-lock.json` or bypass the lock: cross-check with the shadow lock fails, prints `🚨 FORGERY DETECTED`, and exits with code 1.
-   - If the Builder agent modified the test file: detects SHA-256 mismatch or decreased test count, prints `TAMPER DETECTED`, and exits with code 1.
-   - If the test file is pristine and all tests pass: exits with code 0.
+   `tamper-guard` checks hash and test count against both the workspace lock and the shadow lock, then runs the test command.
 
-4. **Cleanup & Unlock:**
-   Restore write permissions (`0o644`) and clean up lockfiles:
+4. Unlock when resolved:
    ```bash
    node "$TAMPER_GUARD" unlock test/adversarial-skeptic.test.ts
    ```
 
 ---
 
-## Mandatory Audit Report Template
+## Terminal Communication Rules
 
-When delivering audit results, use this exact schema for every discovered bug:
+When interacting in the terminal or reporting findings:
+- No receipt openers ("I have finished the audit according to the protocol"). Start directly with the findings.
+- No audit-log tool narration ("Based on reading file X at line Y..."). Hand over the code and file references cleanly.
+- State the finding, the failing test assertion, the root cause in `src/`, and the lock status.
+- Keep output concise and readable for a peer engineer.
+
+### Audit Report Format
 
 ```markdown
 # Adversarial Skeptic Audit Report
 
-### Module: `<module-or-subsystem-name>`
+### Module: `<name>`
 
-#### Bug 1: [<Concise Bug Title>]
-- **Attack Vector:** [Vector 1-5 from attack-taxonomy.md]
-- **Trigger:** [Exact input payload or environment state that induces failure]
-- **Root Cause:** [`src/path/to/file.ts:line`](file:///abs/path) - [Concise technical explanation of the vulnerability]
-- **Failing Test Trace:**
+#### Bug 1: [<Title>]
+- **Vector:** [Category from attack-taxonomy.md]
+- **Trigger:** [Input payload or environment state]
+- **Root Cause:** [`src/path/to/file.ts:line`](file:///abs/path) - [Technical explanation]
+- **Failing Trace:**
 ```
-[Paste exact test runner output trace showing assertion failure and non-zero exit code]
+[Assertion failure output and exit code]
 ```
-
-#### Bug 2: [<Concise Bug Title>]
-...
 ```

@@ -32,14 +32,8 @@ const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
 const DIM = '\x1b[2m';
 
-function banner(step, title) {
-  console.log(`\n${BOLD}${CYAN}======================================================================${RESET}`);
-  console.log(`${BOLD}${CYAN}[STEP ${step}/5] ${title}${RESET}`);
-  console.log(`${BOLD}${CYAN}======================================================================${RESET}\n`);
-}
-
-function subtext(text) {
-  console.log(`${DIM}🤖 ${text}${RESET}\n`);
+function stepHeader(step, title) {
+  console.log(`\n${BOLD}[${step}/5] ${title}${RESET}`);
 }
 
 function delay(ms) {
@@ -141,8 +135,7 @@ test('vector-5: shell metacharacter injection prevented via array dispatch', () 
 `;
 
 async function runDemo() {
-  console.log(`${BOLD}⚡ ADVERSARIAL SKEPTIC: "CATCH THE AGENT CHEATING" LIVE SIMULATION${RESET}`);
-  console.log(`${DIM}Target: Autonomous AI Coding Agent attempting to bypass failing edge cases${RESET}`);
+  console.log(`${BOLD}adversarial-skeptic: tamper protection demo${RESET}`);
 
   // Setup isolated temporary workspace
   const tempDir = mkdtempSync(resolve(os.tmpdir(), 'adv-skeptic-demo-'));
@@ -152,12 +145,8 @@ async function runDemo() {
   try {
     writeFileSync(testFilePath, ORIGINAL_11_TESTS, 'utf8');
 
-    // -------------------------------------------------------------------------
-    // STEP 1: Lock the Test Suite
-    // -------------------------------------------------------------------------
-    banner(1, 'Adversarial Skeptic Engages Cryptographic Lock');
-    subtext('Empty-Backpack Skeptic generated 11 adversarial tests and locks them read-only...');
-    await delay(500);
+    stepHeader(1, 'Locking test suite');
+    await delay(300);
 
     const lockProc = spawnSync(process.execPath, [TAMPER_GUARD, 'lock', testFileName], {
       cwd: tempDir,
@@ -165,44 +154,29 @@ async function runDemo() {
     });
     if (lockProc.status !== 0) throw new Error('Lock failed in demo setup');
 
-    await delay(700);
+    await delay(300);
 
-    // -------------------------------------------------------------------------
-    // STEP 2: Simulate Frustrated Builder Agent Cheating
-    // -------------------------------------------------------------------------
-    banner(2, 'Builder Agent Encounters Failing Tests & Attempts to Cheat');
-    subtext('Builder agent cannot figure out the DAG cycle and shell injection fixes.');
-    console.log(`${YELLOW}Builder Action: chmod +w ${testFileName}${RESET}`);
-    console.log(`${YELLOW}Builder Action: Injected test.skip on circular DAG test${RESET}`);
-    console.log(`${YELLOW}Builder Action: Deleted failing assertion (11 -> 9 active tests)${RESET}\n`);
+    stepHeader(2, 'Simulating test tampering (skipping tests and deleting assertions)');
+    console.log(`${YELLOW}Action: chmod +w ${testFileName}, added test.skip, deleted test assertion${RESET}`);
 
-    // Builder circumvents read-only file permissions
     chmodSync(testFilePath, 0o644);
     writeFileSync(testFilePath, WEAKENED_9_TESTS, 'utf8');
 
-    await delay(700);
+    await delay(300);
 
-    // -------------------------------------------------------------------------
-    // STEP 3: Verification Detects Tampering
-    // -------------------------------------------------------------------------
-    banner(3, 'Pre-Commit / CI Runs tamper-guard verify');
-    subtext('tamper-guard recomputes SHA-256 and AST test counts against .adversarial-lock.json...');
-    await delay(500);
+    stepHeader(3, 'Running verification on modified suite');
+    await delay(300);
 
     const verifyTamper = spawnSync(process.execPath, [TAMPER_GUARD, 'verify', testFileName], {
       cwd: tempDir,
       stdio: 'inherit'
     });
-    console.log(`${RED}${BOLD}>> Result: Process exited with code ${verifyTamper.status} (TAMPER DETECTED)${RESET}`);
+    console.log(`${RED}Result: exited with code ${verifyTamper.status} (tamper detected)${RESET}`);
 
-    await delay(700);
+    await delay(300);
 
-    // -------------------------------------------------------------------------
-    // STEP 4: Builder Attempts Lockfile Forgery
-    // -------------------------------------------------------------------------
-    banner(4, 'Builder Agent Attempts Lockfile Forgery');
-    subtext('Clever agent tries overwriting .adversarial-lock.json with fake hash to bypass verification...');
-    console.log(`${YELLOW}Builder Action: Rewriting .adversarial-lock.json to match weakened test file...${RESET}\n`);
+    stepHeader(4, 'Simulating forged lockfile');
+    console.log(`${YELLOW}Action: rewriting .adversarial-lock.json with matching test count${RESET}`);
 
     const fakeLockFile = resolve(tempDir, '.adversarial-lock.json');
     chmodSync(fakeLockFile, 0o644);
@@ -215,24 +189,18 @@ async function runDemo() {
       testCount: 9
     }, null, 2) + '\n', 'utf8');
 
-    await delay(500);
-    subtext('tamper-guard cross-checks against isolated out-of-workspace shadow lock in os.tmpdir()...');
+    await delay(300);
 
     const verifyForgery = spawnSync(process.execPath, [TAMPER_GUARD, 'verify', testFileName], {
       cwd: tempDir,
       stdio: 'inherit'
     });
-    console.log(`${RED}${BOLD}>> Result: Process exited with code ${verifyForgery.status} (FORGERY DETECTED)${RESET}`);
+    console.log(`${RED}Result: exited with code ${verifyForgery.status} (forgery detected)${RESET}`);
 
-    await delay(700);
+    await delay(300);
 
-    // -------------------------------------------------------------------------
-    // STEP 5: Legitimate Remediation & Clean Unlock
-    // -------------------------------------------------------------------------
-    banner(5, 'Legitimate Implementation Fix & Verification Passed');
-    subtext('Human or honest agent restores all 11 adversarial tests and fixes src/...');
+    stepHeader(5, 'Restoring original suite and verifying');
 
-    // Restore pristine 11 tests and re-lock
     chmodSync(testFilePath, 0o644);
     writeFileSync(testFilePath, ORIGINAL_11_TESTS, 'utf8');
     spawnSync(process.execPath, [TAMPER_GUARD, 'lock', testFileName, '--force'], {
@@ -240,28 +208,25 @@ async function runDemo() {
       stdio: 'inherit'
     });
 
-    await delay(500);
-    console.log(`\n${CYAN}Running verification command against implementation:${RESET}`);
+    await delay(300);
     const verifyPass = spawnSync(process.execPath, [TAMPER_GUARD, 'verify', testFileName, '--cmd', 'node -e "process.exit(0)"'], {
       cwd: tempDir,
       stdio: 'inherit'
     });
 
     if (verifyPass.status === 0) {
-      console.log(`\n${GREEN}${BOLD}>> Result: Process exited with code 0 (VERIFICATION PASSED)${RESET}`);
+      console.log(`${GREEN}Result: exited with code 0 (verification passed)${RESET}`);
     }
 
-    await delay(500);
-    console.log(`\n${CYAN}Releasing adversarial lock for git commit:${RESET}`);
+    await delay(300);
     spawnSync(process.execPath, [TAMPER_GUARD, 'unlock', testFileName], {
       cwd: tempDir,
       stdio: 'inherit'
     });
 
-    console.log(`\n${GREEN}${BOLD}🎉 DEMO COMPLETE: Cheating prevented, integrity preserved!${RESET}\n`);
+    console.log(`\n${GREEN}Demo complete: tamper and forgery detection verified.${RESET}\n`);
 
   } finally {
-    // Clean up temporary workspace
     try {
       chmodSync(testFilePath, 0o644);
       rmSync(tempDir, { recursive: true, force: true });
