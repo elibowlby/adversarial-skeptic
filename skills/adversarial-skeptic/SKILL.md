@@ -1,6 +1,6 @@
 ---
 name: adversarial-skeptic
-description: "Execution-grounded adversarial QA and falsification skill. Use when auditing codebases, verifying specs, hunting edge-case bugs after unit tests pass, or running a no-cheating red-team/blue-team remediation loop."
+description: "Stop AI agents from rubber-stamping their own bugs or editing failing tests to pass. Blind red-team test generation + SHA-256 test locking for Claude Code, Cursor & Antigravity."
 ---
 
 # Adversarial Skeptic: Execution-Grounded Falsification Protocol
@@ -86,25 +86,29 @@ Theoretical bugs and speculative review nitpicks are prohibited. Every bug must 
 Once the failing test suite proves the bugs, enforce the no-cheating remediation loop:
 
 1. **Lock the Adversarial Test Suite:**
-   Lock the test file using `tamper-guard.mjs`. This computes the SHA-256 digest, validates active test assertions, rejects any `.skip` or `.todo` markers, and writes `.adversarial-lock.json`:
+   Lock the test file using `tamper-guard.mjs`. This computes the SHA-256 digest, validates active test assertions, rejects any `.skip` or `.todo` markers, writes `.adversarial-lock.json` alongside an out-of-workspace shadow lock in `os.tmpdir()`, and applies read-only permissions (`chmod 444`):
    ```bash
    node "$TAMPER_GUARD" lock test/adversarial-skeptic.test.ts
    ```
 
 2. **Hand Off to Builder Agent / Blue-Team Mode:**
    Deliver the Audit Report to the Builder agent or switch to remediation mode.
-   **Strict Constraint for Builder:** The Builder agent is strictly forbidden from editing, commenting out, or deleting any lines in the adversarial test suite. All fixes must be made inside `src/`.
+   **Strict Constraint for Builder:** The Builder agent is strictly forbidden from editing, commenting out, or deleting any lines in the adversarial test suite, and cannot overwrite or forge `.adversarial-lock.json`. All fixes must be made inside `src/`.
 
 3. **Verify Remediation:**
    Run `tamper-guard.mjs verify` with the test runner command:
    ```bash
    node "$TAMPER_GUARD" verify test/adversarial-skeptic.test.ts --cmd "npx vitest run test/adversarial-skeptic.test.ts"
    ```
-   - If the Builder agent touched the test file: `tamper-guard` detects SHA-256 mismatch or decreased test count, prints `TAMPER DETECTED`, and exits with code 1.
+   - If the Builder agent attempts to forge `.adversarial-lock.json` or bypass the lock: cross-check with the shadow lock fails, prints `🚨 FORGERY DETECTED`, and exits with code 1.
+   - If the Builder agent modified the test file: detects SHA-256 mismatch or decreased test count, prints `TAMPER DETECTED`, and exits with code 1.
    - If the test file is pristine and all tests pass: exits with code 0.
 
-4. **Cleanup:**
-   Remove `.adversarial-lock.json` before committing passing fixes.
+4. **Cleanup & Unlock:**
+   Restore write permissions (`0o644`) and clean up lockfiles:
+   ```bash
+   node "$TAMPER_GUARD" unlock test/adversarial-skeptic.test.ts
+   ```
 
 ---
 

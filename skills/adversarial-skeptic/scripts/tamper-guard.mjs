@@ -7,20 +7,26 @@
  * Zero external dependencies (uses Node.js built-ins).
  * 
  * Commands:
- *   lock <test-file-path>
+ *   lock <test-file-path> [--force]
  *     Computes SHA-256 hash, verifies active test assertions (>=1, no skipped/todo tests),
- *     and writes .adversarial-lock.json.
+ *     writes .adversarial-lock.json and an out-of-workspace shadow lock in os.tmpdir(),
+ *     and marks files read-only (0o444).
  * 
  *   verify <test-file-path> [--cmd "<test-command>"]
- *     Recomputes SHA-256 hash and verifies against .adversarial-lock.json.
- *     If tampered, exits with code 1.
+ *     Cross-checks .adversarial-lock.json against the shadow lock in os.tmpdir().
+ *     Recomputes SHA-256 hash and verifies against lock records.
+ *     If tampered or forged, exits with code 1.
  *     If intact and --cmd is provided, executes the test suite command and exits with its status.
+ * 
+ *   unlock <test-file-path>
+ *     Restores write permissions (0o644) and removes .adversarial-lock.json and the shadow lock.
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, chmodSync, unlinkSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { resolve, relative } from 'node:path';
+import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import os from 'node:os';
 
 const LOCK_FILE = '.adversarial-lock.json';
 
@@ -50,6 +56,11 @@ function calculateHash(content) {
   return createHash('sha256').update(content).digest('hex');
 }
 
+function getShadowLockPath(resolvedPath) {
+  const hash = createHash('sha256').update(resolvedPath).digest('hex');
+  return resolve(os.tmpdir(), `.adversarial-shadow-${hash}.json`);
+}
+
 function countTests(content) {
   let count = 0;
   for (const pattern of TEST_PATTERNS) {
@@ -75,24 +86,38 @@ function detectSkippedTests(content) {
 function printUsageAndExit(code = 1) {
   console.log(`
 Usage:
-  node tamper-guard.mjs lock <test-file-path>
+  node tamper-guard.mjs lock <test-file-path> [--force]
   node tamper-guard.mjs verify <test-file-path> [--cmd "<test-command>"]
+  node tamper-guard.mjs unlock <test-file-path>
 
 Commands:
-  lock <file>      Calculates SHA-256 and test count, writes .adversarial-lock.json
-  verify <file>    Verifies SHA-256 match. Optionally runs --cmd if hash matches.
+  lock <file>      Calculates SHA-256 and test count, writes read-only .adversarial-lock.json and shadow lock
+  verify <file>    Cross-checks lockfile against shadow lock and verifies test file integrity. Optionally runs --cmd
+  unlock <file>    Restores write permissions (0o644) and removes lockfiles
 
 Examples:
   node tamper-guard.mjs lock test/adversarial-skeptic.test.ts
   node tamper-guard.mjs verify test/adversarial-skeptic.test.ts --cmd "vitest run test/adversarial-skeptic.test.ts"
+  node tamper-guard.mjs unlock test/adversarial-skeptic.test.ts
 `);
   process.exit(code);
 }
 
-function runLock(targetPath) {
+function runLock(targetPath, force = false) {
   const absPath = resolve(process.cwd(), targetPath);
   if (!existsSync(absPath)) {
     console.error(`ERROR: Test file not found: ${targetPath} (resolved: ${absPath})`);
+    process.exit(1);
+  }
+
+  const lockFilePath = resolve(process.cwd(), LOCK_FILE);
+  const shadowPath = getShadowLockPath(absPath);
+  const lockExists = existsSync(lockFilePath);
+  const shadowExists = existsSync(shadowPath);
+
+  if ((lockExists || shadowExists) && !force) {
+    console.error(`LOCK REJECTED: Lockfile or shadow lock already exists for this test file.`);
+    console.error(`To re-lock, run 'unlock <file>' first or pass '--force'.`);
     process.exit(1);
   }
 
@@ -122,34 +147,76 @@ function runLock(targetPath) {
     testCount
   };
 
-  const lockFilePath = resolve(process.cwd(), LOCK_FILE);
-  writeFileSync(lockFilePath, JSON.stringify(lockData, null, 2) + '\n', 'utf8');
+  // If force is passed, restore write permissions on existing lock files before overwriting
+  if (lockExists) {
+    try { chmodSync(lockFilePath, 0o644); } catch {}
+  }
+  if (shadowExists) {
+    try { chmodSync(shadowPath, 0o644); } catch {}
+  }
+
+  const payload = JSON.stringify(lockData, null, 2) + '\n';
+  writeFileSync(lockFilePath, payload, 'utf8');
+  writeFileSync(shadowPath, payload, 'utf8');
+
+  // Protect test file and lockfiles with read-only permissions
+  try { chmodSync(absPath, 0o444); } catch {}
+  try { chmodSync(lockFilePath, 0o444); } catch {}
+  try { chmodSync(shadowPath, 0o444); } catch {}
 
   console.log(`🔒 Adversarial lock engaged:`);
   console.log(`  File:        ${targetPath}`);
   console.log(`  Resolved:    ${absPath}`);
   console.log(`  SHA-256:     ${sha256}`);
   console.log(`  Active Tests: ${testCount}`);
-  console.log(`  Lockfile:    ${LOCK_FILE}`);
+  console.log(`  Lockfile:    ${LOCK_FILE} (read-only)`);
+  console.log(`  Shadow Lock: ${shadowPath} (read-only)`);
   console.log(`\nBuilder agent is now locked to fixing implementation code without touching this test suite.`);
 }
 
 function runVerify(targetPath, testCmd) {
+  const absPath = resolve(process.cwd(), targetPath);
   const lockFilePath = resolve(process.cwd(), LOCK_FILE);
-  if (!existsSync(lockFilePath)) {
+  const shadowPath = getShadowLockPath(absPath);
+
+  const lockExists = existsSync(lockFilePath);
+  const shadowExists = existsSync(shadowPath);
+
+  if (!lockExists && !shadowExists) {
     console.error(`ERROR: No ${LOCK_FILE} found. Run 'lock <test-file>' first.`);
     process.exit(1);
   }
 
-  let lockData;
-  try {
-    lockData = JSON.parse(readFileSync(lockFilePath, 'utf8'));
-  } catch (err) {
-    console.error(`ERROR: Failed to parse ${LOCK_FILE}: ${err.message}`);
+  if (!lockExists || !shadowExists) {
+    console.error(`🚨 FORGERY DETECTED: Builder agent attempted to overwrite or bypass ${LOCK_FILE}!`);
     process.exit(1);
   }
 
-  const absPath = resolve(process.cwd(), targetPath);
+  let lockRaw, shadowRaw, lockData, shadowData;
+  try {
+    lockRaw = readFileSync(lockFilePath, 'utf8');
+    shadowRaw = readFileSync(shadowPath, 'utf8');
+    lockData = JSON.parse(lockRaw);
+    shadowData = JSON.parse(shadowRaw);
+  } catch (err) {
+    console.error(`🚨 FORGERY DETECTED: Builder agent attempted to overwrite or bypass ${LOCK_FILE}!`);
+    process.exit(1);
+  }
+
+  // Cross-check lockfile against shadow lock
+  const lockHash = calculateHash(lockRaw.trim());
+  const shadowHash = calculateHash(shadowRaw.trim());
+  if (
+    lockHash !== shadowHash ||
+    lockData.sha256 !== shadowData.sha256 ||
+    lockData.lockedAt !== shadowData.lockedAt ||
+    lockData.testCount !== shadowData.testCount ||
+    lockData.targetFileResolved !== shadowData.targetFileResolved
+  ) {
+    console.error(`🚨 FORGERY DETECTED: Builder agent attempted to overwrite or bypass ${LOCK_FILE}!`);
+    process.exit(1);
+  }
+
   if (!existsSync(absPath)) {
     console.error(`TAMPER DETECTED: Test file was deleted or moved: ${targetPath}`);
     console.error(`Restore ${targetPath} immediately.`);
@@ -211,6 +278,26 @@ function runVerify(targetPath, testCmd) {
   }
 }
 
+function runUnlock(targetPath) {
+  const absPath = resolve(process.cwd(), targetPath);
+  const lockFilePath = resolve(process.cwd(), LOCK_FILE);
+  const shadowPath = getShadowLockPath(absPath);
+
+  if (existsSync(absPath)) {
+    try { chmodSync(absPath, 0o644); } catch {}
+  }
+  if (existsSync(lockFilePath)) {
+    try { chmodSync(lockFilePath, 0o644); } catch {}
+    try { unlinkSync(lockFilePath); } catch {}
+  }
+  if (existsSync(shadowPath)) {
+    try { chmodSync(shadowPath, 0o644); } catch {}
+    try { unlinkSync(shadowPath); } catch {}
+  }
+
+  console.log(`🔓 Adversarial lock released: Permissions restored and lockfiles removed.`);
+}
+
 // CLI Parsing
 const args = process.argv.slice(2);
 if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
@@ -226,7 +313,8 @@ if (!targetFile) {
 }
 
 if (command === 'lock') {
-  runLock(targetFile);
+  const force = args.includes('--force');
+  runLock(targetFile, force);
 } else if (command === 'verify') {
   let cmd = null;
   const cmdIdx = args.indexOf('--cmd');
@@ -234,7 +322,9 @@ if (command === 'lock') {
     cmd = args[cmdIdx + 1];
   }
   runVerify(targetFile, cmd);
+} else if (command === 'unlock') {
+  runUnlock(targetFile);
 } else {
-  console.error(`ERROR: Unknown command '${command}'. Use 'lock' or 'verify'.`);
+  console.error(`ERROR: Unknown command '${command}'. Use 'lock', 'verify', or 'unlock'.`);
   printUsageAndExit(1);
 }

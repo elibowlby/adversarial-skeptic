@@ -1,13 +1,13 @@
 {
   "name": "adversarial-skeptic",
-  "description": "Execution-grounded adversarial QA and falsification skill for Claude Code and Agent ecosystems",
+  "description": "Stop AI agents from rubber-stamping their own bugs or editing failing tests to pass. Blind red-team test generation + SHA-256 test locking for Claude Code, Cursor & Antigravity.",
   "owner": {
     "name": "adversarial-skeptic maintainers"
   },
   "plugins": [
     {
       "name": "adversarial-skeptic",
-      "description": "Execution-grounded adversarial QA and falsification skill. Use when auditing codebases, verifying specs, hunting edge-case bugs after unit tests pass, or running a no-cheating red-team/blue-team remediation loop.",
+      "description": "Stop AI agents from rubber-stamping their own bugs or editing failing tests to pass. Blind red-team test generation + SHA-256 test locking for Claude Code, Cursor & Antigravity.",
       "version": "1.0.0",
       "source": "./",
       "author": {

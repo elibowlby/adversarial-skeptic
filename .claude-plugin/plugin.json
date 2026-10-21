@@ -1,6 +1,6 @@
 {
   "name": "adversarial-skeptic",
-  "description": "Execution-grounded adversarial QA and falsification skill. Use when auditing codebases, verifying specs, hunting edge-case bugs after unit tests pass, or running a no-cheating red-team/blue-team remediation loop.",
+  "description": "Stop AI agents from rubber-stamping their own bugs or editing failing tests to pass. Blind red-team test generation + SHA-256 test locking for Claude Code, Cursor & Antigravity.",
   "version": "1.0.0",
   "author": {
     "name": "adversarial-skeptic maintainers"
@@ -9,13 +9,19 @@
   "repository": "https://github.com/elibowlby/adversarial-skeptic",
   "license": "MIT",
   "keywords": [
-    "skills",
-    "adversarial",
-    "qa",
-    "falsification",
+    "agent-skills",
+    "claude-code",
+    "claude-code-plugin",
+    "ai-coding-agents",
+    "cursor-rules",
+    "adversarial-testing",
+    "red-teaming",
+    "llm-evaluation",
+    "antigravity",
+    "gemini-cli",
     "tamper-guard",
-    "red-team",
-    "anti-bias",
-    "verification"
+    "anti-cheating",
+    "falsification",
+    "qa"
   ]
 }

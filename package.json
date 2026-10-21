@@ -1,29 +1,35 @@
 {
   "name": "adversarial-skeptic",
   "version": "1.0.0",
-  "description": "Execution-grounded adversarial QA and falsification skill for AI agents",
+  "description": "Stop AI agents from rubber-stamping their own bugs or editing failing tests to pass. Blind red-team test generation + SHA-256 test locking for Claude Code, Cursor & Antigravity.",
   "type": "module",
   "main": "skills/adversarial-skeptic/scripts/tamper-guard.mjs",
   "bin": {
-    "tamper-guard": "skills/adversarial-skeptic/scripts/tamper-guard.mjs"
+    "tamper-guard": "./skills/adversarial-skeptic/scripts/tamper-guard.mjs"
   },
   "files": [
     "skills",
     ".claude-plugin"
   ],
   "scripts": {
-    "test": "node skills/adversarial-skeptic/scripts/tamper-guard.mjs --help"
+    "test": "node skills/adversarial-skeptic/scripts/tamper-guard.mjs --help",
+    "demo": "node examples/demo-simulation.mjs"
   },
   "keywords": [
     "agent-skills",
     "claude-code",
-    "antigravity",
-    "cursor",
-    "codex",
+    "claude-code-plugin",
+    "ai-coding-agents",
+    "cursor-rules",
     "adversarial-testing",
+    "red-teaming",
+    "llm-evaluation",
+    "antigravity",
+    "gemini-cli",
+    "tamper-guard",
+    "anti-cheating",
     "falsification",
-    "qa",
-    "tamper-guard"
+    "qa"
   ],
   "author": "adversarial-skeptic maintainers",
   "license": "MIT",
