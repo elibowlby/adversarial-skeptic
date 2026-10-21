@@ -4,6 +4,7 @@ package-lock.json
 
 # Adversarial skeptic ephemeral lock
 .adversarial-lock.json
+examples/billing-webhooks/.fixes-enabled
 
 # Temporary / Scratch
 scratch/
