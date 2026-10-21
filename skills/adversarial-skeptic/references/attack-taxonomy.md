@@ -1,6 +1,6 @@
 # Attack Taxonomy and Falsification Reference
 
-Concrete bug patterns and test assertions to check when auditing an implementation against a specification. Every finding requires a reproducible, failing test case.
+Concrete bug patterns and test assertions to try against your branch or feature. Every finding requires a reproducible, failing test case.
 
 ---
 

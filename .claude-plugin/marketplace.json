@@ -1,13 +1,13 @@
 {
   "name": "adversarial-skeptic",
-  "description": "Blind red-team test generation and SHA-256 test locking to stop coding agents from rubber-stamping bugs or weakening test assertions.",
+  "description": "Creates bulletproof tests for your branch changes and locks them with SHA-256 so agents cannot cheat.",
   "owner": {
     "name": "adversarial-skeptic maintainers"
   },
   "plugins": [
     {
       "name": "adversarial-skeptic",
-      "description": "Blind red-team test generation and SHA-256 test locking to stop coding agents from rubber-stamping bugs or weakening test assertions.",
+      "description": "Creates bulletproof tests for your branch changes and locks them with SHA-256 so agents cannot cheat.",
       "version": "1.0.0",
       "source": "./",
       "author": {

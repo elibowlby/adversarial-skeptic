@@ -1,10 +1,10 @@
-# Audit Report: Agent CLI Framework
+# 11 Edge Cases Caught in Agent CLI Framework
 
-11 edge cases identified during a blind audit of `@agent-framework/cli` v2.4.0, verified with test suite `test/adversarial-skeptic.test.ts`.
+11 edge cases caught during adversarial testing of `@agent-framework/cli` v2.4.0, verified with test suite `test/adversarial-skeptic.test.ts`.
 
 ---
 
-## Audit Summary
+## Summary
 
 - **Target Package:** `@agent-framework/cli` v2.4.0
 - **Test Suite:** `test/adversarial-skeptic.test.ts`
@@ -139,7 +139,7 @@ AssertionError: expected { 'HOST\r': '127.0.0.1\r' } to deeply equal { HOST: '12
 
 #### Bug 9: Concurrent Task Runner State Contamination Across Disjoint Targets
 - **Attack Vector:** Vector 4 (Cross-Feature State Contamination)
-- **Trigger:** Running parallel audit tasks targeting two disjoint workspace paths (`/repo-a` and `/repo-b`).
+- **Trigger:** Running parallel runner tasks targeting two disjoint workspace paths (`/repo-a` and `/repo-b`).
 - **Root Cause:** [`src/execution/task-runner.ts:32`](file:///src/execution/task-runner.ts#L32) maintains a module-scoped singleton variable `activeContext` instead of scoping state per `TaskRunner` instance.
 - **Failing Test Trace:**
 ```text

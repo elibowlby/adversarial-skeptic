@@ -1,6 +1,6 @@
 ---
 name: adversarial-skeptic
-description: "Generates blind red-team tests from specs and locks them with SHA-256 to stop coding agents from rubber-stamping bugs or weakening test assertions."
+description: "Creates bulletproof tests for your branch changes and locks them with SHA-256 so agents cannot cheat."
 ---
 
 # Adversarial Skeptic Protocol
@@ -9,7 +9,7 @@ description: "Generates blind red-team tests from specs and locks them with SHA-
 
 Coding agents frequently miss their own edge cases and may edit or skip failing tests to make CI green. adversarial-skeptic prevents this with three steps:
 
-1. **Empty-Backpack Audit:** Inspect the spec and source code without reading existing unit tests.
+1. **Blind Inspection:** Inspect branch changes and source code without reading existing unit tests.
 2. **Proof-by-Execution:** Every bug claim must be backed by a runnable test that fails against current code (`exit_code != 0`).
 3. **Cryptographic Lock:** Lock the test suite with SHA-256 before remediation begins. The builder agent can only modify implementation files in `src/`.
 
@@ -18,10 +18,10 @@ Coding agents frequently miss their own edge cases and may edit or skip failing 
 ## When to Trigger
 
 Activate this skill when:
-- Auditing an implementation against a specification or type definitions.
-- Running pre-release verification or responding to `/adversarial-skeptic`.
-- Refactoring parsers, state machines, stream ingestion, or security-sensitive modules.
-- Existing tests pass, but edge cases need thorough validation.
+- User prompts: `use adversarial-skeptic to create bullet proof tests on my changes in this branch`
+- Checking branch changes before opening or merging a PR (`git diff main...HEAD`).
+- Checking refactors, state machines, stream ingestion, or authentication modules for unhandled edge cases.
+- User runs `/adversarial-skeptic`.
 
 ---
 
@@ -42,15 +42,15 @@ TAMPER_GUARD="<resolved-path-to-tamper-guard.mjs>"
 
 ## Protocol Steps
 
-### Step 1: Empty-Backpack Audit
+### Step 1: Inspect Branch Changes
 
 Avoid reading existing tests to prevent self-affirmation bias:
 - **Subagent (Recommended):** Dispatch an isolated subagent:
   ```text
-  You are an adversarial test engineer. Read only SPEC.md (or README/types) and src/.
-  Do not inspect existing test files. Find edge cases and invariant violations.
+  You are an adversarial test engineer. Inspect what changed on this branch against main (git diff main...HEAD) and read the modified source files.
+  Do not inspect existing test files. Find edge cases and write failing tests for them.
   ```
-- **Single Context:** Read only `SPEC.md` and `src/`. Do not open `tests/` before writing hypotheses.
+- **Single Context:** Read the branch diff and changed source files. Do not open `tests/` before writing hypotheses.
 - Target common edge cases from `references/attack-taxonomy.md`:
   - Truncated or empty inputs (0-byte files, `null` JSONL records, sliced UTF-8 buffers).
   - Graph cycles (circular parents, orphaned child references after deletion).
@@ -105,15 +105,15 @@ Once tests fail as expected, lock the suite:
 ## Terminal Communication Rules
 
 When interacting in the terminal or reporting findings:
-- No receipt openers ("I have finished the audit according to the protocol"). Start directly with the findings.
-- No audit-log tool narration ("Based on reading file X at line Y..."). Hand over the code and file references cleanly.
+- No receipt openers ("I have finished the inspection according to the protocol"). Start directly with the findings.
+- No tool-narration footers ("Based on reading file X at line Y..."). Hand over the code and file references cleanly.
 - State the finding, the failing test assertion, the root cause in `src/`, and the lock status.
 - Keep output concise and readable for a peer engineer.
 
-### Audit Report Format
+### Findings Report Format
 
 ```markdown
-# Adversarial Skeptic Audit Report
+# Adversarial Skeptic Findings
 
 ### Module: `<name>`
 

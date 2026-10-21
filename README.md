@@ -1,6 +1,6 @@
 # adversarial-skeptic
 
-> Coding agents rubber-stamp their own code. When edge cases fail, they often edit assertions or add `.skip` instead of fixing root causes. adversarial-skeptic pairs blind red-team test generation with SHA-256 test locking to keep test suites honest.
+> Coding agents rubber-stamp their own code. When edge cases fail, they often edit assertions or add `.skip` instead of fixing root causes. adversarial-skeptic writes tests that try to break your branch, then locks them with SHA-256 so your agent has to fix the real code.
 
 [![Agent Skills 2026 Compatible](https://img.shields.io/badge/Agent%20Skills-2026%20Standard-blue.svg)](https://github.com/elibowlby/adversarial-skeptic)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin%20Ready-purple.svg)](https://github.com/elibowlby/adversarial-skeptic)
@@ -55,7 +55,7 @@ git clone https://github.com/elibowlby/adversarial-skeptic.git /tmp/adversarial-
 
 Add this rule to `.cursorrules` or `AGENTS.md`:
 ```markdown
-When auditing code or conducting pre-release verification, follow the adversarial protocol in `.cursor/skills/adversarial-skeptic/SKILL.md`. Prove bugs with failing tests and lock suites with `tamper-guard`.
+When verifying branch changes or testing edge cases, follow the adversarial protocol in `.cursor/skills/adversarial-skeptic/SKILL.md`. Prove bugs with failing tests and lock suites with `tamper-guard`.
 ```
 </details>
 
@@ -80,10 +80,10 @@ Lock Tool: skills/adversarial-skeptic/scripts/tamper-guard.mjs
 Prompt your agent:
 
 ```text
-Use adversarial-skeptic to audit src/ against SPEC.md
+use adversarial-skeptic to create bullet proof tests on my changes in this branch
 ```
 
-Or trigger during pre-release review:
+Or trigger with slash command:
 
 ```text
 /adversarial-skeptic
@@ -91,13 +91,13 @@ Or trigger during pre-release review:
 
 ### Workflow
 
-1. **Empty Backpack:** The agent maps `SPEC.md` against `src/` without reading `tests/`.
-2. **Proof-by-Execution:** The agent drafts `test/adversarial-skeptic.test.*` targeting the [Attack Taxonomy](skills/adversarial-skeptic/references/attack-taxonomy.md) and runs it with your test runner (`node --test`, `vitest`, `pytest`, `cargo test`, `go test`).
+1. **Inspect Changes:** The agent checks your branch diff against main without reading existing tests.
+2. **Write Failing Tests:** The agent drafts `test/adversarial-skeptic.test.*` targeting edge cases in what you changed and runs it with your test runner (`node --test`, `vitest`, `pytest`, `cargo test`, `go test`). Every test must fail against current code (`exit_code != 0`).
 3. **Cryptographic Lock:** The agent locks the test file:
    ```bash
    node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs lock test/adversarial-skeptic.test.ts
    ```
-4. **Remediation & Verify:** Fix the source code in `src/`. Once done, verify and unlock:
+4. **Fix & Verify:** Fix the source code in `src/`. Once done, verify and unlock:
    ```bash
    node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs verify test/adversarial-skeptic.test.ts --cmd "npx vitest run test/adversarial-skeptic.test.ts"
    node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs unlock test/adversarial-skeptic.test.ts
@@ -111,7 +111,7 @@ When coding agents evaluate their own work, they test only the paths they alread
 
 | Dimension | Default Agent Loop | With adversarial-skeptic |
 |---|---|---|
-| **Context Isolation** | Reads own implementation and tests | Blind audit (reads only `SPEC.md` and `src/`) |
+| **Context Isolation** | Reads own implementation and tests | Clean context (inspects branch diff and source, skips existing tests) |
 | **Bug Claims** | Speculative comments or passing tests | Proof-by-execution (`exit_code != 0` required against `src/`) |
 | **Remediation Loop** | Agent can edit tests, delete assertions, or add `.skip` | Locked read-only with SHA-256 and shadow lock |
 | **70-Bug Benchmark** | 14 to 27 / 70 bugs caught | 66 / 70 bugs caught |
@@ -174,8 +174,8 @@ Verification passed: all tests passed without test tampering.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                   PHASE 1: EMPTY-BACKPACK AUDIT                        │
-│   • Reads SPEC.md / types / interfaces + src/                          │
+│                   PHASE 1: RED-TEAM TEST DISCOVERY                     │
+│   • Reads branch diff (git diff main...HEAD) + changed files           │
 │   • Blind to existing unit tests                                       │
 │   • Evaluates edge cases: streams, DAGs, drift, concurrency, security  │
 └───────────────────────────────────┬────────────────────────────────────┘
@@ -297,7 +297,7 @@ adversarial-skeptic/
 │       └── run-eval.mjs                      # Benchmark runner (init & score)
 ├── examples/
 │   ├── demo-simulation.mjs                   # Tamper protection demo
-│   └── real-world-audit-report.md            # Empirical audit case study
+│   └── real-world-audit-report.md            # 11-bug empirical case study
 ├── assets/
 │   ├── demo.svg                              # Terminal visual asset
 │   └── demo.tape                             # VHS recording configuration
