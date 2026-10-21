@@ -137,6 +137,10 @@ Want to see how `tamper-guard` catches an AI coding agent attempting to bypass t
 npm run demo
 ```
 
+<p align="center">
+  <img src="./assets/demo.svg" alt="tamper-guard demo simulation" width="850" />
+</p>
+
 ### Real Terminal Output:
 
 **1. When tests are locked:**

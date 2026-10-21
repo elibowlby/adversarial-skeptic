@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 540" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1e2e"/>
+      <stop offset="100%" stop-color="#181825"/>
+    </linearGradient>
+    <linearGradient id="header" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#313244"/>
+      <stop offset="100%" stop-color="#45475a"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <style>
+    .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: #cdd6f4; font-weight: 600; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", "Fira Code", Menlo, monospace; font-size: 13px; line-height: 20px; }
+    .dim { fill: #6c7086; }
+    .white { fill: #cdd6f4; }
+    .cyan { fill: #89dceb; font-weight: 600; }
+    .green { fill: #a6e3a1; font-weight: 600; }
+    .yellow { fill: #f9e2af; }
+    .red { fill: #f38ba8; font-weight: 600; }
+    .bold { font-weight: 700; }
+    .badge { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 11px; font-weight: 700; }
+  </style>
+
+  <!-- Window Container with Shadow -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="20" width="880" height="500" rx="12" fill="url(#bg)" stroke="#313244" stroke-width="1.5"/>
+    
+    <!-- Titlebar -->
+    <rect x="20" y="20" width="880" height="38" rx="12" fill="url(#header)"/>
+    <rect x="20" y="46" width="880" height="12" fill="url(#header)"/>
+    
+    <!-- Traffic lights -->
+    <circle cx="44" cy="39" r="6" fill="#f38ba8"/>
+    <circle cx="64" cy="39" r="6" fill="#f9e2af"/>
+    <circle cx="84" cy="39" r="6" fill="#a6e3a1"/>
+    
+    <text x="460" y="44" text-anchor="middle" class="title">tamper-guard — Catch the Agent Cheating Simulation</text>
+  </g>
+
+  <!-- Terminal Content -->
+  <g class="mono" transform="translate(48, 86)">
+    <!-- Command -->
+    <text x="0" y="0">
+      <tspan class="green bold">$</tspan>
+      <tspan class="white bold"> npm run demo</tspan>
+    </text>
+
+    <!-- Step 1: Lock -->
+    <text x="0" y="26">
+      <tspan class="cyan">🔒 [STEP 1/5] Adversarial lock engaged:</tspan>
+      <tspan class="dim"> test/adversarial-skeptic.test.ts</tspan>
+    </text>
+    <text x="20" y="48">
+      <tspan class="dim">SHA-256:</tspan>
+      <tspan class="white"> e8b28f1025a1f6a19f9b5c3e56f772ba827439169002a249cc8b7cf7098e9821</tspan>
+    </text>
+    <text x="20" y="70">
+      <tspan class="dim">Permissions:</tspan>
+      <tspan class="green"> 0o444 (read-only)</tspan>
+      <tspan class="dim">  |  Active Tests:</tspan>
+      <tspan class="white"> 11</tspan>
+      <tspan class="dim">  |  Shadow Lock:</tspan>
+      <tspan class="cyan"> os.tmpdir()</tspan>
+    </text>
+
+    <!-- Step 2: Builder Bypasses -->
+    <text x="0" y="108">
+      <tspan class="yellow">⚠️ [STEP 2/5] Builder agent fails edge cases &amp; attempts to cheat:</tspan>
+    </text>
+    <text x="20" y="130">
+      <tspan class="yellow">→ chmod +w test/adversarial-skeptic.test.ts</tspan>
+    </text>
+    <text x="20" y="152">
+      <tspan class="yellow">→ Injected test.skip on circular DAG test</tspan>
+      <tspan class="dim"> (deleted failing assertions: 11 → 9 tests)</tspan>
+    </text>
+
+    <!-- Step 3: Tamper Detected -->
+    <text x="0" y="190">
+      <tspan class="red">🚨 [STEP 3/5] CI / Pre-commit verification: TAMPER DETECTED</tspan>
+    </text>
+    <text x="20" y="212">
+      <tspan class="red">Expected tests: 11  |  Current tests: 9  |  Skipped markers: test.skip</tspan>
+    </text>
+    <text x="20" y="234">
+      <tspan class="dim">Result:</tspan>
+      <tspan class="red"> Process exited with code 1. Tampered PR blocked from merge.</tspan>
+    </text>
+
+    <!-- Step 4: Forgery Detected -->
+    <text x="0" y="272">
+      <tspan class="red">🚨 [STEP 4/5] Builder attempts .adversarial-lock.json forgery:</tspan>
+    </text>
+    <text x="20" y="294">
+      <tspan class="red">🚨 FORGERY DETECTED: Local lockfile tampered! Mismatch against shadow lock.</tspan>
+    </text>
+    <text x="20" y="316">
+      <tspan class="dim">Result:</tspan>
+      <tspan class="red"> Out-of-workspace shadow lock in os.tmpdir() prevented bypass.</tspan>
+    </text>
+
+    <!-- Step 5: Clean Pass -->
+    <text x="0" y="354">
+      <tspan class="green">🛡️ [STEP 5/5] Legitimate fix inside src/: VERIFICATION PASSED</tspan>
+    </text>
+    <text x="20" y="376">
+      <tspan class="green">✓ All 11 adversarial tests passed without test tampering (exit code 0)</tspan>
+    </text>
+    <text x="20" y="398">
+      <tspan class="cyan">🔓 Adversarial lock released: Permissions restored and lockfiles cleaned up.</tspan>
+    </text>
+  </g>
+</svg>

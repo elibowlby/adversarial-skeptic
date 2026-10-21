@@ -2,7 +2,6 @@
 # Run: vhs assets/demo.tape
 
 Output assets/demo.gif
-Output assets/demo.svg
 
 Set Shell "bash"
 Set FontSize 14
@@ -17,4 +16,4 @@ Type "npm run demo"
 Sleep 500ms
 Enter
 
-Sleep 8s
+Sleep 10s
