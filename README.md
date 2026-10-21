@@ -123,7 +123,7 @@ Changes not staged for commit:
 
 ● Locking adversarial test suite
   $ tamper-guard lock test/adversarial-skeptic.test.ts
-  Locked test/adversarial-skeptic.test.ts (2 tests, sha256: 8f2a1c...). Read-only mode set.
+  Locked test/adversarial-skeptic.test.ts (2 tests, sha256: 5c5465...). Read-only mode set.
 
 ● Fixing root causes in src/billing/webhook-handler.ts...
   - Added atomic transaction lock on idempotency_key
@@ -299,17 +299,22 @@ adversarial-skeptic/
 │       ├── README.md
 │       └── run-eval.mjs                      # Benchmark runner (init & score)
 ├── examples/
-│   ├── real-world-usecase/                   # Runnable branch verification module
+│   ├── billing-webhooks/                     # Workplace branch verification scenario (feat/billing-webhooks)
+│   │   ├── src/billing/webhook-handler.ts
+│   │   ├── test/adversarial-skeptic.test.ts
+│   │   ├── apply-fix.mjs
+│   │   └── reset.mjs
+│   ├── real-world-usecase/                   # Runnable stream-reader verification module
 │   │   ├── src/stream-reader.ts
 │   │   ├── test/unit.test.ts
 │   │   ├── test/adversarial-skeptic.test.ts
 │   │   └── run-workflow.mjs
 │   └── real-world-audit-report.md            # 11-bug empirical case study
 ├── assets/
-│   ├── workplace-session.gif         # Real-world Claude Code terminal recording
-│   ├── workplace-session.tape        # VHS recording definition
-│   ├── demo.gif                      # Minimal CLI demo
-│   └── demo.tape                     # VHS recording configuration
+│   ├── workplace-session.gif                 # Real-world Claude Code terminal recording (450 KB)
+│   ├── workplace-session.tape                # VHS recording definition
+│   ├── demo.gif                              # Minimal CLI demo
+│   └── demo.tape                             # VHS recording configuration
 ├── package.json                              # Agent skills and npm manifest
 ├── LICENSE                                   # MIT
 └── README.md                                 # Documentation & Quickstart
