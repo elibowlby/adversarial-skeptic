@@ -11,6 +11,107 @@
 
 ---
 
+## 1-Command Installation
+
+Install with the universal 1-liner visible by default:
+
+```bash
+npx skills add elibowlby/adversarial-skeptic
+```
+
+<details>
+<summary><b>Install in Claude Code</b></summary>
+
+Install directly via the Claude Code plugin manager:
+```bash
+claude plugin add elibowlby/adversarial-skeptic
+```
+
+Or install as a local skill without directory nesting:
+```bash
+git clone https://github.com/elibowlby/adversarial-skeptic.git /tmp/adversarial-skeptic \
+  && mkdir -p .claude/skills \
+  && cp -r /tmp/adversarial-skeptic/skills/adversarial-skeptic .claude/skills/ \
+  && rm -rf /tmp/adversarial-skeptic
+```
+</details>
+
+<details>
+<summary><b>Install in Gemini CLI & Antigravity (<code>agy</code>)</b></summary>
+
+Add to your project's workspace skills:
+```bash
+git clone https://github.com/elibowlby/adversarial-skeptic.git /tmp/adversarial-skeptic \
+  && mkdir -p .agents/skills \
+  && cp -r /tmp/adversarial-skeptic/skills/adversarial-skeptic .agents/skills/ \
+  && rm -rf /tmp/adversarial-skeptic
+```
+</details>
+
+<details>
+<summary><b>Install in Cursor & Windsurf</b></summary>
+
+Clone directly into your workspace skills directory:
+```bash
+git clone https://github.com/elibowlby/adversarial-skeptic.git /tmp/adversarial-skeptic \
+  && mkdir -p .cursor/skills \
+  && cp -r /tmp/adversarial-skeptic/skills/adversarial-skeptic .cursor/skills/ \
+  && rm -rf /tmp/adversarial-skeptic
+```
+
+Add the enforcement rule to `.cursorrules` or `AGENTS.md`:
+```markdown
+When auditing code or conducting pre-release verification, always follow the adversarial protocol in `.cursor/skills/adversarial-skeptic/SKILL.md`. Prove bugs with failing tests and lock suites with `tamper-guard`.
+```
+</details>
+
+<details>
+<summary><b>Install in Codex & Custom Agents</b></summary>
+
+Global CLI installation:
+```bash
+npm install -g adversarial-skeptic
+```
+
+Or reference the skill manifest directly in your agent system prompt:
+```markdown
+Adversarial Verification Protocol: skills/adversarial-skeptic/SKILL.md
+Lock Tool: skills/adversarial-skeptic/scripts/tamper-guard.mjs
+```
+</details>
+
+---
+
+## Usage
+
+Prompt your agent:
+
+```text
+Use adversarial-skeptic to audit src/ against SPEC.md
+```
+
+Or trigger during pre-release review:
+
+```text
+/adversarial-skeptic
+```
+
+### The 4-Step Protocol:
+
+1. **Empty Backpack:** The agent maps `SPEC.md` against `src/` without reading `tests/`.
+2. **Proof-by-Execution:** The agent drafts `test/adversarial-skeptic.test.*` targeting the [Attack Taxonomy](skills/adversarial-skeptic/references/attack-taxonomy.md) and executes it using your native test runner (`vitest`, `pytest`, `cargo test`, `go test`, `bun test`, `node --test`).
+3. **Cryptographic Lock:** The agent locks the test file:
+   ```bash
+   node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs lock test/adversarial-skeptic.test.ts
+   ```
+4. **Remediation & Verify:** You (or a builder agent) fix `src/`. Once complete, verify and unlock:
+   ```bash
+   node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs verify test/adversarial-skeptic.test.ts --cmd "npx vitest run test/adversarial-skeptic.test.ts"
+   node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs unlock test/adversarial-skeptic.test.ts
+   ```
+
+---
+
 ## Why This Exists: The 70-Bug Reality
 
 In Anthropic's landmark 70-bug Dynamic Workflow benchmark:
@@ -117,107 +218,6 @@ Executing verification command: npx vitest run test/adversarial-skeptic.test.ts
 │   • tamper-guard.mjs unlock: Restores write permissions & cleans up   │
 └────────────────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## 1-Command Installation
-
-Install with the universal 1-liner visible by default:
-
-```bash
-npx skills add elibowlby/adversarial-skeptic
-```
-
-<details>
-<summary><b>Install in Claude Code</b></summary>
-
-Install directly via the Claude Code plugin manager:
-```bash
-claude plugin add elibowlby/adversarial-skeptic
-```
-
-Or install as a local skill without directory nesting:
-```bash
-git clone https://github.com/elibowlby/adversarial-skeptic.git /tmp/adversarial-skeptic \
-  && mkdir -p .claude/skills \
-  && cp -r /tmp/adversarial-skeptic/skills/adversarial-skeptic .claude/skills/ \
-  && rm -rf /tmp/adversarial-skeptic
-```
-</details>
-
-<details>
-<summary><b>Install in Gemini CLI & Antigravity (<code>agy</code>)</b></summary>
-
-Add to your project's workspace skills:
-```bash
-git clone https://github.com/elibowlby/adversarial-skeptic.git /tmp/adversarial-skeptic \
-  && mkdir -p .agents/skills \
-  && cp -r /tmp/adversarial-skeptic/skills/adversarial-skeptic .agents/skills/ \
-  && rm -rf /tmp/adversarial-skeptic
-```
-</details>
-
-<details>
-<summary><b>Install in Cursor & Windsurf</b></summary>
-
-Clone directly into your workspace skills directory:
-```bash
-git clone https://github.com/elibowlby/adversarial-skeptic.git /tmp/adversarial-skeptic \
-  && mkdir -p .cursor/skills \
-  && cp -r /tmp/adversarial-skeptic/skills/adversarial-skeptic .cursor/skills/ \
-  && rm -rf /tmp/adversarial-skeptic
-```
-
-Add the enforcement rule to `.cursorrules` or `AGENTS.md`:
-```markdown
-When auditing code or conducting pre-release verification, always follow the adversarial protocol in `.cursor/skills/adversarial-skeptic/SKILL.md`. Prove bugs with failing tests and lock suites with `tamper-guard`.
-```
-</details>
-
-<details>
-<summary><b>Install in Codex & Custom Agents</b></summary>
-
-Global CLI installation:
-```bash
-npm install -g adversarial-skeptic
-```
-
-Or reference the skill manifest directly in your agent system prompt:
-```markdown
-Adversarial Verification Protocol: skills/adversarial-skeptic/SKILL.md
-Lock Tool: skills/adversarial-skeptic/scripts/tamper-guard.mjs
-```
-</details>
-
----
-
-## Quickstart & Usage
-
-Prompt your agent:
-
-```text
-Use adversarial-skeptic to audit src/ against SPEC.md
-```
-
-Or trigger during pre-release review:
-
-```text
-/adversarial-skeptic
-```
-
-### The 4-Step Protocol:
-
-1. **Empty Backpack:** The agent maps `SPEC.md` against `src/` without reading `tests/`.
-2. **Proof-by-Execution:** The agent drafts `test/adversarial-skeptic.test.*` targeting the [Attack Taxonomy](skills/adversarial-skeptic/references/attack-taxonomy.md) and executes it using your native test runner (`vitest`, `pytest`, `cargo test`, `go test`, `bun test`, `node --test`).
-3. **Cryptographic Lock:** The agent locks the test file:
-   ```bash
-   node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs lock test/adversarial-skeptic.test.ts
-   ```
-4. **Remediation & Verify:** You (or a builder agent) fix `src/`. Once complete, verify and unlock:
-   ```bash
-   node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs verify test/adversarial-skeptic.test.ts --cmd "npx vitest run test/adversarial-skeptic.test.ts"
-   node ./skills/adversarial-skeptic/scripts/tamper-guard.mjs unlock test/adversarial-skeptic.test.ts
-   ```
 
 ---
 
