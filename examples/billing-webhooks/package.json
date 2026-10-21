@@ -1,0 +1,10 @@
+{
+  "name": "billing-webhooks",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Billing service webhooks handler with deliberate edge case vulnerabilities",
+  "scripts": {
+    "test": "node --test test/adversarial-skeptic.test.ts"
+  }
+}
