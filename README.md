@@ -120,16 +120,16 @@ When coding agents evaluate their own work, they test only the paths they alread
 
 ---
 
-## Interactive Demo
+## Real-World Example & Demo
 
-Run the zero-dependency simulation to see how `tamper-guard` catches test modifications and lockfile forgeries:
+Run the real-world branch telemetry usecase (`examples/real-world-usecase/`) to see `tamper-guard` catch test tampering and lockfile forgeries in real time:
 
 ```bash
 npm run demo
 ```
 
 <p align="center">
-  <img src="./assets/demo.svg" alt="tamper-guard demo simulation" width="850" />
+  <img src="./assets/demo.svg" alt="adversarial-skeptic real-world branch verification" width="850" />
 </p>
 
 ### Terminal Output Examples
@@ -296,9 +296,14 @@ adversarial-skeptic/
 │       ├── README.md
 │       └── run-eval.mjs                      # Benchmark runner (init & score)
 ├── examples/
-│   ├── demo-simulation.mjs                   # Tamper protection demo
+│   ├── real-world-usecase/                   # Runnable branch verification module
+│   │   ├── src/stream-reader.ts
+│   │   ├── test/unit.test.ts
+│   │   ├── test/adversarial-skeptic.test.ts
+│   │   └── run-workflow.mjs
 │   └── real-world-audit-report.md            # 11-bug empirical case study
 ├── assets/
+│   ├── demo.gif                              # Live VHS recording
 │   ├── demo.svg                              # Terminal visual asset
 │   └── demo.tape                             # VHS recording configuration
 ├── package.json                              # Agent skills and npm manifest

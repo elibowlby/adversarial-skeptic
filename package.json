@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "test": "node skills/adversarial-skeptic/scripts/tamper-guard.mjs --help",
-    "demo": "node examples/demo-simulation.mjs"
+    "demo": "node examples/real-world-usecase/run-workflow.mjs"
   },
   "keywords": [
     "agent-skills",
